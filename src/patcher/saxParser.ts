@@ -38,13 +38,11 @@ export function parseStoryboardFile(filepath: string): ElementRecord[] {
   const raw = readFileSync(filepath, "utf8");
   const parser = new SaxesParser({ xmlns: false, position: true });
 
-  // We'll track a stack of open elements with their start indices and attrs
   type StackEntry = {
     tag: string;
     attrs: Record<string, string>;
     startIndex: number;
     openTagEndIndex?: number;
-    // temporary flags
     hasAccessibility?: boolean;
     accessibilityAttrs?: Record<string, string>;
     startLine?: number;
@@ -53,16 +51,12 @@ export function parseStoryboardFile(filepath: string): ElementRecord[] {
   const stack: StackEntry[] = [];
   const results: ElementRecord[] = [];
 
-  // Helper: convert index->line number by counting '\n'
   function indexToLine(idx: number) {
-    // lines are 1-based line numbers
     const prefix = raw.slice(0, Math.max(0, idx));
     return prefix.split(/\r\n|\r|\n/).length;
   }
 
-  // Saxes gives tag info in onopentag with parser.position available.
   parser.on("error", (err) => {
-    // rethrow with file context
     throw new Error(`XML parse error in ${filepath}: ${err.message}`);
   });
 
@@ -83,7 +77,7 @@ export function parseStoryboardFile(filepath: string): ElementRecord[] {
     const startIndex = ltIndex >= 0 ? ltIndex : 0;
 
     const gtIndex = raw.indexOf("/>", parserPos - 1);
-    const openTagEndIndex = gtIndex >= 0 ? gtIndex + 1 : parserPos;
+    const openTagEndIndex = gtIndex >= 0 ? gtIndex + 2 : parserPos;
 
     const stackEntry: StackEntry = {
       tag: lower,
@@ -109,13 +103,24 @@ export function parseStoryboardFile(filepath: string): ElementRecord[] {
   parser.on("closetag", (tag) => {
     const tagName = tag.name;
     const parserPos = (parser as any).position ?? (parser as any).pos ?? 0;
-    const closeLt = raw.lastIndexOf("</" + tagName, Math.max(0, parserPos - 1));
-    const closeGt = raw.indexOf(">", closeLt >= 0 ? closeLt : parserPos - 1);
-    const closeStartIndex = closeLt >= 0 ? closeLt : Math.max(0, parserPos - 1);
-    const endIndex = closeGt >= 0 ? closeGt + 1 : parserPos;
-
     const entry = stack.pop();
     if (!entry) return;
+
+    const isSelfClosing = entry.openTagEndIndex && 
+      raw.slice(entry.openTagEndIndex - 2, entry.openTagEndIndex) === "/>";
+
+    let closeStartIndex: number;
+    let endIndex: number;
+
+    if (isSelfClosing) {
+      closeStartIndex = entry.openTagEndIndex!;
+      endIndex = entry.openTagEndIndex!;
+    } else {
+      const closeLt = raw.lastIndexOf("</" + tagName, Math.max(0, parserPos - 1));
+      const closeGt = raw.indexOf(">", closeLt >= 0 ? closeLt : parserPos - 1);
+      closeStartIndex = closeLt >= 0 ? closeLt : Math.max(0, parserPos - 1);
+      endIndex = closeGt >= 0 ? closeGt + 1 : parserPos;
+    }
 
     if (TRACK_TAGS.has(entry.tag)) {
       const rec: ElementRecord = {
