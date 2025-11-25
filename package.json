@@ -6,7 +6,14 @@
   "bin": {
     "parsenode": "./bin/parsenode.js"
   },
-  "main": "dist/index.js",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/main.js",
+      "types": "./dist/main.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist bin",
@@ -24,18 +31,29 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://your-repo.git"
+    "url": "git+https://github.com/yourusername/parsenode.git"
   },
+  "bugs": {
+    "url": "https://github.com/yourusername/parsenode/issues"
+  },
+  "homepage": "https://github.com/yourusername/parsenode#readme",
   "keywords": [
     "xcode",
     "storyboard",
     "accessibility",
     "appium",
     "saxes",
-    "cli"
+    "cli",
+    "ios",
+    "xib",
+    "automation",
+    "testing"
   ],
-  "author": "Your Team",
+  "author": "Your Name <namang2510@gmail.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "commander": "^11.0.0",
     "fast-glob": "^3.3.2",
