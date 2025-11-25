@@ -24,11 +24,12 @@ export function computePatchOpsForFile(
   for (const r of records) {
     if (r.hasAccessibility) continue;
 
-    // Prefer the exact start of the closing tag
     const closeStart = r.closeTagStartIndex ?? r.endIndex ?? r.openTagEndIndex;
     if (typeof closeStart !== "number") continue;
 
-    const lastNewlineBeforeClose = rawText.lastIndexOf("\n", closeStart);
+    const isSelfClosing = r.closeTagStartIndex === r.openTagEndIndex;
+
+    const lastNewlineBeforeClose = rawText.lastIndexOf("\n", closeStart - (isSelfClosing ? 1 : 0));
     const closingTagLine =
       rawText.slice(lastNewlineBeforeClose + 1, closeStart) || "";
 
@@ -42,7 +43,9 @@ export function computePatchOpsForFile(
           r.attrs.id ?? r.attrs.userLabel ?? r.attrs.accessibilityIdentifier
         );
 
-    const insertText = buildAccessibilityLine(indent, idsrc);
+    const insertText = isSelfClosing 
+      ? "\n" + buildAccessibilityLine(indent, idsrc)
+      : buildAccessibilityLine(indent, idsrc);
 
     ops.push({
       insertIndex: closeStart,
