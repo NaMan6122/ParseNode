@@ -1,0 +1,58 @@
+{
+  "name": "parsenode",
+  "version": "1.0.0",
+  "description": "ParseNode — text-preserving accessibility injector for Xcode Storyboards/XIBs (saxes tokenizer)",
+  "type": "module",
+  "bin": {
+    "parsenode": "./bin/parsenode.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist bin",
+    "start": "node ./bin/parsenode.js",
+    "dev": "ts-node src/cli.ts",
+    "test": "jest --runInBand",
+    "lint": "eslint . --ext .ts",
+    "prepare": "npm run build",
+    "pkg": "pkg . --out-path dist-bin"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://your-repo.git"
+  },
+  "keywords": [
+    "xcode",
+    "storyboard",
+    "accessibility",
+    "appium",
+    "saxes",
+    "cli"
+  ],
+  "author": "Your Team",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0",
+    "fast-glob": "^3.3.2",
+    "saxes": "^5.0.0",
+    "chalk": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^2.8.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^14.0.0",
+    "pkg": "^5.8.0"
+  }
+}
