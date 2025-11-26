@@ -1,6 +1,6 @@
 {
   "name": "parsenode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ParseNode — text-preserving accessibility injector for Xcode Storyboards/XIBs (saxes tokenizer)",
   "type": "module",
   "bin": {
