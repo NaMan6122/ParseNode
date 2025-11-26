@@ -27,18 +27,14 @@ const opts = program.opts();
 async function processFile(file: string) {
 	const raw = await fs.readFile(file, "utf8");
 	const records = parseStoryboardFile(file);
-	const ops = computePatchOpsForFile(raw, records, {
-		idCallback: (r) => {
-		const idsource = (r.attrs && (r.attrs.userLabel || r.attrs.id || r.attrs.accessibilityIdentifier)) || "";
-		return idsource ? `${idsource}` : `${r.tag}_${r.attrs.id ?? "noid"}`;
-		}
-	});
+	const ops = computePatchOpsForFile(raw, records);
 
 	console.log(chalk.blue(`\n${file}: found ${records.length} tracked elements; planned ops: ${ops.length}`));
 	if (ops.length === 0) return { file, ops: [] };
 
 	for (const op of ops) {
-		console.log(chalk.yellow(` - ${op.record.tag} lines ${op.record.startLine}-${op.record.endLine} -> will insert at byte ${op.insertIndex}`));
+		const outletInfo = op.record.outletName ? chalk.green(` [outlet: ${op.record.outletName}]`) : chalk.gray(' [no outlet]');
+		console.log(chalk.yellow(` - ${op.record.tag} lines ${op.record.startLine}-${op.record.endLine}${outletInfo}`));
 	}
 
 	const res = await applyPatchOpsToFile(file, raw, ops, {
