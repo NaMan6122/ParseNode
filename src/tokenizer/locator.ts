@@ -3,9 +3,9 @@ import type { ElementRecord } from "../patcher/saxParser.js";
 import { makeIdentifier, buildAccessibilityLine } from "./generator.js";
 
 export type PatchOp = {
-  insertIndex: number;
-  insertText: string;
-  record: ElementRecord;
+	insertIndex: number;
+	insertText: string;
+	record: ElementRecord;
 };
 
 /**
@@ -13,48 +13,53 @@ export type PatchOp = {
  * with PERFECT formatting preservation.
  */
 export function computePatchOpsForFile(
-  rawText: string,
-  records: ElementRecord[],
-  options?: {
-    idCallback?: (r: ElementRecord) => string;
-  }
+	rawText: string,
+	records: ElementRecord[],
+	options?: {
+		idCallback?: (r: ElementRecord) => string;
+	}
 ): PatchOp[] {
-  const ops: PatchOp[] = [];
+	const ops: PatchOp[] = [];
 
-  for (const r of records) {
-    if (r.hasAccessibility) continue;
+	for (const r of records) {
+		if (r.hasAccessibility) continue;
 
-    const closeStart = r.closeTagStartIndex ?? r.endIndex ?? r.openTagEndIndex;
-    if (typeof closeStart !== "number") continue;
+		const closeStart = r.closeTagStartIndex ?? r.endIndex ?? r.openTagEndIndex;
+		if (typeof closeStart !== "number") continue;
 
-    const isSelfClosing = r.closeTagStartIndex === r.openTagEndIndex;
+		const isSelfClosing = r.closeTagStartIndex === r.openTagEndIndex;
 
-    const lastNewlineBeforeClose = rawText.lastIndexOf("\n", closeStart - (isSelfClosing ? 1 : 0));
-    const closingTagLine =
-      rawText.slice(lastNewlineBeforeClose + 1, closeStart) || "";
+		const lastNewlineBeforeClose = rawText.lastIndexOf("\n", closeStart - (isSelfClosing ? 1 : 0));
+		const closingTagLine =
+		rawText.slice(lastNewlineBeforeClose + 1, closeStart) || "";
 
-    const indentMatch = closingTagLine.match(/^(\s*)/);
-    const indent = indentMatch ? indentMatch[1] : "";
+		const indentMatch = closingTagLine.match(/^(\s*)/);
+		const indent = indentMatch ? indentMatch[1] : "";
 
-    const idsrc = options?.idCallback
-      ? options.idCallback(r)
-      : makeIdentifier(
-          r.tag,
-          r.attrs.id ?? r.attrs.userLabel ?? r.attrs.accessibilityIdentifier
-        );
+		let idsrc: string;
+		if (options?.idCallback) {
+			idsrc = options.idCallback(r);
+		} else if (r.outletName) {
+			idsrc = r.outletName;
+		} else {
+			idsrc = makeIdentifier(
+				r.tag,
+				r.attrs.id ?? r.attrs.userLabel ?? r.attrs.accessibilityIdentifier
+			);
+		}
 
-    const insertText = isSelfClosing 
-      ? "\n" + buildAccessibilityLine(indent, idsrc)
-      : buildAccessibilityLine(indent, idsrc);
+		const insertText = isSelfClosing 
+			? "\n" + buildAccessibilityLine(indent, idsrc)
+			: buildAccessibilityLine(indent, idsrc);
 
-    ops.push({
-      insertIndex: closeStart,
-      insertText,
-      record: r,
-    });
-  }
+		ops.push({
+			insertIndex: closeStart,
+			insertText,
+			record: r,
+		});
+	}
 
-  ops.sort((a, b) => a.insertIndex - b.insertIndex);
+	ops.sort((a, b) => a.insertIndex - b.insertIndex);
 
-  return ops;
+	return ops;
 }
